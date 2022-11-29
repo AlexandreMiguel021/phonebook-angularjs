@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt_BR" ng-app="phonebook">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lista telefonica</title>
+    <link
+      rel="stylesheet"
+      href="/node_modules/bootstrap/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="/css/app.css" />
+    <script src="/node_modules/bootstrap/js/dist/toast.js"></script>
+    <script src="/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/node_modules/bootstrap/js/dist/modal.js"></script>
+    <script src="/node_modules/angular/angular.min.js"></script>
+    <script src="/node_modules/angular-messages/angular-messages.min.js"></script>
+    <script src="/node_modules/axios/dist/axios.min.js"></script>
+    <script src="/node_modules/angular-input-masks/releases/angular-input-masks-standalone.min.js"></script>
+  </head>
+
+  <body ng-controller="phonebookCtrl">
+    <div
+      class="modal fade"
+      id="exampleModal"
+      tabindex="-1"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">
+              Exclução de contatos
+            </h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>
+              Você tem certeza que quer excluir os contatos selecionados? Não
+              será possível reverter depois de excluidos.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              cancelar
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              ng-click="deleteContacts(contacts)"
+              data-bs-dismiss="modal"
+            >
+              excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {{contactsList}}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div
+        id="liveToast"
+        class="toast"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <div class="toast-header toast-success">
+          <strong class="me-auto">Lista telefônica</strong>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="toast"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="toast-body background-color: #00bf00;">
+          Contato adicionado com sucesso!
+        </div>
+      </div>
+    </div>
+    <div class="container-sm max-w-2">
+      <h4 class="my-4">Lista telefônica</h4>
+      <input
+        class="form-control mb-2"
+        placeholder="buscar"
+        type="text"
+        ng-model="search"
+      />
+      <select
+        class="form-control my-2"
+        ng-options="showOption for showOption in showOptions"
+        ng-model="quantity"
+      >
+        <option value="">mostrar todos</option>
+      </select>
+      <table ng-show="contacts.length" class="table table-striped">
+        <tr>
+          <th></th>
+          <th><a href="" ng-click="orderBy('name')">Name</a></th>
+          <th><a href="" ng-click="orderBy('phone')">Phone</a></th>
+          <th><a href="" ng-click="orderBy('date')">Create</a></th>
+          <th><a href="" ng-click="orderBy('operadora.name')">operadora</a></th>
+        </tr>
+        <tr
+          ng-class="{'table-danger': contact.selected}"
+          ng-repeat="contact in contacts | limitTo:quantity | filter:search | orderBy: order:direction"
+        >
+          <td>
+            <input
+              class="checkbox"
+              type="checkbox"
+              ng-model="contact.selected"
+            />
+          </td>
+          <td>{{contact.name | name}}</td>
+          <td>{{contact.phone | phone}}</td>
+          <td>{{contact.date | date:'dd/MM/yyyy'}}</td>
+          <td>{{contact.operadora.name}}</td>
+        </tr>
+      </table>
+      <hr />
+
+      <h4 class="mt-5 mb-3">Criar um novo contato</h4>
+      <form name="contactForm">
+        <div class="mb-3">
+          <input
+            class="form-control mb-2"
+            placeholder="nome"
+            type="text"
+            name="name"
+            ng-model="contact.name"
+            ng-required="true"
+            ng-class="{valid: contactForm.name.$valid}"
+          />
+          <div
+            class="input-error mt-1 mb-1"
+            ng-show="contactForm.name.$invalid && contactForm.name.$dirty"
+            ng-messages="contactForm.name.$error"
+          >
+            <div ng-message="required">Preecha o nome</div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <input
+            class="form-control"
+            placeholder="telefone ou celular"
+            type="tel"
+            name="phone"
+            ng-model="contact.phone"
+            ng-required="true"
+            ui-br-phone-number-mask="areaCode"
+            ng-class="{valid: contactForm.phone.$valid}"
+          />
+          <div
+            class="input-error mt-2"
+            ng-show="contactForm.phone.$invalid && contactForm.phone.$dirty"
+            ng-messages="contactForm.phone.$error"
+          >
+            <div ng-message="required">Preencha o telefone ou celular</div>
+            <div ng-message="brPhoneNumber">
+              Preencha um número de celular ou telefone válido
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-2">
+          <select
+            class="form-control mt-2 cursor-pointer"
+            ng-model="contact.operadora"
+            ng-options="operadora.name for operadora in operadoras | orderBy:'name'"
+            ng-required="true"
+          >
+            <option value="">Selecione uma operadora</option>
+          </select>
+        </div>
+      </form>
+      <button
+        class="btn btn-primary"
+        ng-click="addContact(contact)"
+        ng-disabled="contactForm.$invalid"
+      >
+        Adicionar contato
+      </button>
+      <button
+        class="btn btn-danger"
+        type="button"
+        ng-show="hasContactSelected(contacts)"
+        data-bs-toggle="modal"
+        data-bs-target="#exampleModal"
+      >
+        apagar contato(s)
+      </button>
+    </div>
+    <script src="/app/app.js"></script>
+    <script src="/app/controllers/phonebookCtrl.js"></script>
+    <script src="/app/services/contactsAPI.js"></script>
+    <script src="/app/services/operadorasAPI.js"></script>
+    <script src="/app/constants/api.js"></script>
+    <script src="/app/utils/normalize-phone-number.js"></script>
+    <script src="/app/filters/nameFilter.js"></script>
+    <script src="/app/filters/phoneFilter.js"></script>
+  </body>
+</html>
