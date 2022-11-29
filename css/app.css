@@ -1,0 +1,40 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  .selected {
+    background-color: #c3c3c3;
+    font-weight: 600;
+  }
+  
+  .valid {
+    background-color: #74ff746d;
+  }
+  
+  .max-w-2 {
+    max-width: 650px;
+  }
+  
+  .checkbox {
+    cursor: pointer;
+  }
+  
+  .input-error {
+    color: rgb(170, 15, 15);
+  }
+  
+  .toast-success {
+    background-color: #00bf00;
+    color: white;
+  }
+  
+  .toast-success-body {
+    background-color: #96ff96;
+  }
+  
+  .cursor-pointer {
+    cursor: pointer;
+  }
+  
